@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html>
+
+        <head>
+                <meta charset="UTF-8">
+                <script src='https://ssl.p.jwpcdn.com/player/v/8.6.2/jwplayer.js'></script>
+                <script type='text/javascript'>jwplayer.key = 'SVraoFHqPyR0QJQgqMGh0r6LbVbZd1OwJYRTyK6buiw=';</script>
+
+        </head>
+
+        <body style='margin:0;padding:0'>
+
+<div id="myPlayer">Loading the player...</div>
+
+<script type="text/javascript">
+
+//startTime&endTime timestamps in seconds
+var startTime = Math.round((Date.now() - 60000) / 1000);  //Date.now()-60 seconds before because of Stream Server clock non rsync
+var expiretime = (60*60*1000);
+var endTime = Math.round((Date.now() + expiretime) / 1000);
+console.log('StartTime ' + startTime)
+console.log('Endtime ' + endTime)
+
+//Custom Parameter
+var customParam = 'abcdef';
+//StreamUrl
+var streamUrl = 'http://52.137.30.42:1935/LiveLoopSecure/Stream1/playlist.m3u8';
+
+//Content Path
+var contentPath = 'vodsecure/sample.mp4';
+//var contentPath = 'LiveLoopSecure/Stream1';
+
+// Init player function once the hash has been retrieved 
+var initPlayer = function (hash){
+    console.log(hash);
+    var hlsUrl = 
+        //'http://52.137.30.42/LiveLoopSecure/Stream1/playlist.m3u8' + '?' +
+        'http://motiwecdn.azureedge.net/vodsecure/sample.mp4/playlist.m3u8' + '?' +
+        //'http://52.137.30.42/vodsecure/sample.mp4/playlist.m3u8' + '?' +
+        'myTokenPrefixstarttime=' + startTime + '&' +
+        'myTokenPrefixendtime=' + endTime + '&' +
+        'myTokenPrefixCustomParameter=' + customParam + '&' +
+        'myTokenPrefixhash=' + hash;
+    console.log(hlsUrl);
+    var src = {
+      hls: hlsUrl
+    };
+
+ var playerInstance = jwplayer("myPlayer");
+ playerInstance.setup({
+
+  //Add header for requests
+  playlist: [{
+        sources: [{
+            file: hlsUrl,
+            //onXhrOpen: function(xhr, hlsUrl) {
+            //    xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+            //}
+        }]
+  }],
+      
+    //file: hlsUrl,
+    //image:"/Users/fahricetin/Pictures/2018_07_27/40-50 TUALL.JPG",
+    width: "90%",
+    aspectratio: "16:9",
+    livetimeout: "0",
+    minDvrWindow: "120",
+    autostart: "true",
+    mute: "false",
+    controls: "true",
+    playbackRateControls: true,
+    title:'quZBRtUIRIppfhVn1T7CR84R3CHJqJwX',
+    displaydescription: false,
+    displaytitle: false,
+    flashplayer: "/jwplayer/jwplayer-8.1.12/jwplayer.flash.swf",
+    mute: false,
+    ph: 1,
+    mediaid: "live",
+    preload: "metadata",
+    primary: "html5",
+    hlshtml: true,
+    repeat: false,
+    stagevideo: false,
+    stretching: "uniform",
+    visualplaylist: false,
+    mediaid: '87765444222'
+  });
+
+  
+  playerInstance.on('error', function(){
+       playerInstance.load({
+            file: hlsUrl + '&backupUrl',
+      });
+     playerInstance.play();
+
+  });
+
+jwplayer("myPlayer").getContainer().setAttribute('playsinline', 'playsinline');
+
+}
+ // Ajax request for the hash to our node/express app
+ var requestHash = function (url) {
+    var req = new XMLHttpRequest();
+    req.open('GET', url, true);
+    req.onreadystatechange = function () {
+      if (req.readyState === 4) {
+        var response = req.responseText;
+        if (req.status === 200) {
+          initPlayer(response);
+        } else {
+          console.log('Could not get sha256 hash');
+        }
+      }
+    };
+    req.onerror = function () {
+      console.log('Could not get sha256 hash');
+    };
+    req.send();
+  };
+  // Start the request to your node/express server
+  var serverHashUrl = 'http://127.0.0.1:3000/generate-hash';
+  requestHash(serverHashUrl + '?startTime=' + startTime + '&endTime=' + endTime + '&customParam=' + customParam + '&contentPath=' + contentPath);
+
+</script>
+
+</body>
+
+</html>
