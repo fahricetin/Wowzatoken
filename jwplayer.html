@@ -16,23 +16,27 @@
 
 //startTime&endTime timestamps in seconds
 var startTime = Math.round((Date.now() - 60000) / 1000);  //Date.now()-60 seconds before because of Stream Server clock non rsync
-var expiretime = 15*60*1000;
+var expiretime = (60*60*1000);
 var endTime = Math.round((Date.now() + expiretime) / 1000);
 console.log('StartTime ' + startTime)
 console.log('Endtime ' + endTime)
 
 //Custom Parameter
 var customParam = 'abcdef';
+//StreamUrl
+var streamUrl = 'http://52.137.30.42:1935/LiveLoopSecure/Stream1/playlist.m3u8';
+
 //Content Path
 var contentPath = 'vodsecure/sample.mp4';
+//var contentPath = 'LiveLoopSecure/Stream1';
 
 // Init player function once the hash has been retrieved 
 var initPlayer = function (hash){
     console.log(hash);
     var hlsUrl = 
-        //'http://52.137.30.42:1935/LiveLoopSecure/Stream1/playlist.m3u8' + '?' +
-        //'http://motiwecdn.azureedge.net/vodsecure/sample.mp4/playlist.m3u8' + '?' +
-        'http://52.137.30.42/vodsecure/sample.mp4/playlist.m3u8' + '?' +
+        //'http://52.137.30.42/LiveLoopSecure/Stream1/playlist.m3u8' + '?' +
+        'http://motiwecdn.azureedge.net/vodsecure/sample.mp4/playlist.m3u8' + '?' +
+        //'http://52.137.30.42/vodsecure/sample.mp4/playlist.m3u8' + '?' +
         'myTokenPrefixstarttime=' + startTime + '&' +
         'myTokenPrefixendtime=' + endTime + '&' +
         'myTokenPrefixCustomParameter=' + customParam + '&' +
@@ -42,7 +46,6 @@ var initPlayer = function (hash){
       hls: hlsUrl
     };
 
- 
  var playerInstance = jwplayer("myPlayer");
  playerInstance.setup({
 
@@ -83,11 +86,18 @@ var initPlayer = function (hash){
     mediaid: '87765444222'
   });
 
-}
+  
+  playerInstance.on('error', function(){
+       playerInstance.load({
+            file: hlsUrl + '&backupUrl',
+      });
+     playerInstance.play();
+
+  });
 
 jwplayer("myPlayer").getContainer().setAttribute('playsinline', 'playsinline');
 
-
+}
  // Ajax request for the hash to our node/express app
  var requestHash = function (url) {
     var req = new XMLHttpRequest();
